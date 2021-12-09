@@ -1,0 +1,4 @@
+Se foloseste API-ul standard pentru accesul la stiva de comunicatie (modulul socket);
+Nu se folosesc biblioteci si module suplimentare care interactioneaza direct sau indirect cu stiva de comunicatie;
+Aplicatia trebuie sa dispuna de o interfata grafica care sa permita demonstrarea tuturor modurilor de functionare (interfete disponibile in Python - Tkinter, WxPython, PyQT etc.);
+Aplicatia trebuie sa stocheze informatii despre pachetele trimise/receptionate pentru analiza si validarea secventelor de comunicatie (lista in GUI, fisier log etc.).
