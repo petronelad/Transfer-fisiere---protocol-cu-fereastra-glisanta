@@ -3,7 +3,7 @@ import packetS
 
 '''
     receive() - receives packets, 
-    recvfrom return a pair(bytes, address) -> data received and adsress of the socket sender
+    recvfrom return a pair(bytes, address) -> data received and address of the socket sender
 '''
 
 #primesc pachetul si trimit raspuns
