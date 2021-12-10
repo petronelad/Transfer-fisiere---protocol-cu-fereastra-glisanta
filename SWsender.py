@@ -51,7 +51,16 @@ def send(file_to_send):
     # (The format of address depends on the address family — see above.)
     # Raises an auditing event socket.bind with arguments self, address.
     number_elem_in_win = 0
-    
+    packet_index = 0
+    # while number_elem_in_win < WINDOW_SIZE:
+    #     for packet in buffer:
+    #         if packet.flag == 1:
+    #             number_elem_in_win += 1
+    #             if number_elem_in_win >= WINDOW_SIZE:
+    #                 break
+    #             packet.send_packet(socket_for_send)
+    #             print(packet.data)
+
     for packet in buffer:
         if packet.flag == packetS.State.ON_HOLD:
             packet.send_packet(socket_for_send)
