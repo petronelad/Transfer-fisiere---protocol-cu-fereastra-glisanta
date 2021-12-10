@@ -55,10 +55,11 @@ class GUI():
 
             if file:
                 #print("Fisierul s-a incarcat.")
-                readFile = file.read();
+                readFile = file.read()
                 #print(citireFisier)
 
             #afisarea textului in fereastra
+            readFile = ''
             text_box = tk.Text(SenderView, height=500, width=500, padx=15, pady=15)
             text_box.insert(1.0, readFile)
             text_box.tag_configure('center', justify='center')
