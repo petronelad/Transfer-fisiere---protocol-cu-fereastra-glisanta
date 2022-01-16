@@ -1,10 +1,12 @@
 from enum import Enum
+from sys import byteorder
 
 
 class State(Enum):
         ON_HOLD = 1
         SEND = 2
         RECEIVED = 3
+        UNKNOWN = 4
 
 
 ''' 
@@ -30,9 +32,8 @@ class Packet:
 
 
     def send_response(self):
-        self.flag = State.RECEIVED
-        return
-
+        print(self.id_packet.to_bytes(4, byteorder = 'little', signed = True) + State.RECEIVED.value.to_bytes(4, byteorder = 'little', signed = True))
+        return self.id_packet.to_bytes(4, byteorder = 'little', signed = True) + State.RECEIVED.value.to_bytes(4, byteorder = 'little', signed = True)
 
 
 
