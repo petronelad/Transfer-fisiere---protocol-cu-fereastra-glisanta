@@ -1,4 +1,20 @@
-Se foloseste API-ul standard pentru accesul la stiva de comunicatie (modulul socket);
+Se foloseste API-ul standard pentru accesul la stiva de comunicație (modulul socket);
 Nu se folosesc biblioteci si module suplimentare care interactioneaza direct sau indirect cu stiva de comunicatie;
 Aplicatia trebuie sa dispuna de o interfata grafica care sa permita demonstrarea tuturor modurilor de functionare (interfete disponibile in Python - Tkinter, WxPython, PyQT etc.);
 Aplicatia trebuie sa stocheze informatii despre pachetele trimise/receptionate pentru analiza si validarea secventelor de comunicatie (lista in GUI, fisier log etc.).
+Aplicatia trebuie sa stocheze informatii despre pachetele trimise/receptionate pentru analiza si validarea secventelor de comunicatie (lista in GUI, fisier log etc.).
+5.1. Diferenţa faţă de alte protocoale
+Metoda ferestrei glisante asigură evitarea congestionării traficului în rețea pentru că se vor oferi constant date pentru transmiterea către TCP fără a ţine cont de problemele de congestie a traficului de rețea, deoarece TCP-ul de pe partea expeditorului și receptorului implementează ferestre glisante ale bufferului de pachete. Dimensiunea ferestrei poate varia dinamic în funcție de traficul din rețea.
+Date fiind dezavantajele protocolului de tip pas-cu-pas de a fi numai unidirecţionale (simplex) şi de a se putea bloca dacă pauza de aşteptare de la emiţător este prea mică, s-au căutat alte protocoale care să rămână sincronizate în condiţiile oricăror combinaţii de cadre alterate şi de pauze de aşteptare prea scurte. Astfel de protocoale sunt cele din clasa cu sliding window.
+Protocoalele de ferestre glisante sunt utilizate acolo unde este necesară livrarea fiabilă (care prezintă siguranță în funcționare) în ordine a pachetelor sau utilizate pentru a îmbunătăți eficiența atunci când canalul poate include un nivel ridicat de latenţă.
+
+5.2. Principiu de funcţionare
+Toate protocoalele cu fereastră glisantă au la bază același concept: emițătorul grupează pachetele, fiecărui pachet de date trimis îi este atribuit un număr consecutiv unic şi un cronometru, astfel încât transmiterea datelor să poată fi urmărită de către receptor (plasare corectă, eliminare pachete duplicate, identificare pachete lipsă).
+Receptorul confirmă primirea fiecărui pachet indicând numărul de secvență al ultimului pachet recepționat corect; în lipsa răspunsurilor într-un anumit interval de timp prestabilit, emițătorul nu are informații legate de starea pachetelor, astfel acestea se vor retrimite. Odată ce emițătorul a primit confirmarea pentru un pachet, fereastra se va deplasa (va glisa) spre un pachet cu numărul de ordine imediat mai mare care nu a fost trimis sau care nu a primit confirmare în timp util.
+Concret, dacă am avea, de exemplu, 8 pachete, ar însemna că transmiţătorul are voie la început să trimită 8 pachete în secvenţă, unul după altul, pentru care poate ulterior să aştepte confirmări. După ce primeşte confirmare pentru primul pachet, acela este eliminat din fereastră iar fereastra glisează cu o poziţie, adică pachetul se elimină din partea inferioară a ferestrei şi glisează cu o poziţie care devine disponibilă şi atunci transmiţătorul are voie să transmită al nouălea pachet şi vom avea tot 8 pachete în tranzit. Apoi primeşte confirmare de la al doilea pachet, fereastra iarăşi glisează şi trimite al zecelea pachet, adică noi în permanenţă vom avea 8 pachete în tranzit pentru că aceasta este dimensiunea ferestrei şi pe măsură ce primim confirmări pentru pachetele mai vechi, fereastra tot va avansa şi ne va permite să trimitem următoarele pachete.
+În timpul transmiterii, pachetele se pot afla în una din situațiile următoare:
+trimis şi confirmat
+trimis şi neconfirmat
+netrimis și așteptat
+netrimis şi neaşteptat
+Numerele de ordine din fereastra expeditorului reprezintă pachete care au fost trimise sau pot fi trimise, dar nu sunt încă confirmate. Cele din fereastra receptorului reprezintă ultimele pachete primite corect.
