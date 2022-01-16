@@ -44,35 +44,37 @@ class GUI():
         # TO DO: 
         # button for delete content from text box (between ADD file and SEND)
 
-        # text_box = tk.Text(SenderView, height=500, width=500, padx=15, pady=15, font='Helvetica 10')
-        # text_box.place(relx=0.5, rely=0.05, relwidth=0.9, relheight=0.9, anchor='n')
-        entry_box = tk.Entry(SenderView, font='Helvetica 10')
-        entry_box.place(relwidth=0.65, relheight=1)
-
+        text_box = tk.Text(SenderView, height=500, width=500, padx=15, pady=15, font='Helvetica 10')
+        text_box.place(relx=0.5, rely=0.05, relwidth=0.9, relheight=0.9, anchor='n')
+       
         #adaugare fisier
         def open_file():
-            browse.set("Se incarca...")
-            file = askopenfile(parent=window, mode='rb', title='Alege un fisier', filetype=[('Fisier text', '*.txt')])
-            browse.set("Incarcat")
-
+            browse.set("Loading...")
+            file = askopenfile(parent=window, mode='rb', title='Choose a file', filetype=[('Fisier text', '*.txt')])
+            browse.set("Loaded")
             readFile = ''
             if file:
                 readFile = file.read()
+                print(readFile)
+                print(readFile.decode())
 
             #afisarea textului in fereastra
-            entry_box.insert(END, readFile)
-            terminal_box.insert(END,"Fisierul s-a incarcat!\n")
-                                # text_box.tag_add('center',1.0,'end')
+            text_box.insert(END, readFile.decode())
+            terminal_box.insert(END,"File loaded!\n")
 
-        #TO DO: verify how to do the first line not blank
         def send_pack_callback():
-            if not entry_box.get():
+            if not text_box.get("1.0", "end-1c"):
                  terminal_box.insert(END, "Nothing to send!\n")
             else:
-                print("-------------------\n")
-                print(entry_box.get())
-                print("-------------------\n")                
-                SWsender.send(entry_box.get())
+                # print("-------------------\n")
+                # print(text_box.get("1.0", "end-1c").encode())
+                # print("-------------------\n")    
+                file = open("file_intermediate.txt", "wb")        
+                file.write(text_box.get("1.0", "end-1c").encode())    
+                SWsender.send("file_intermediate.txt")
+                terminal_box.insert(END,"File sent!\n")
+                file.close()
+
 
         # buton Send
         button_send = tk.Button(text="Send", bg='#00FF00', command=lambda: send_pack_callback())

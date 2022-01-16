@@ -1,10 +1,11 @@
 import socket
-import threading
+import _thread
 import packetS
 import time
 
 
-TIMER = 2
+WAITING_TIME = 1
+STOP_TIME = 5
 PACKET_SIZE = 200
 WINDOW_SIZE = 8
 
@@ -47,52 +48,83 @@ def create_buffer(file_to_send):
 
 def send(file_to_send):
 
+    global id_next_elem_in_window, start_time, my_thread
+    start_time = STOP_TIME
+    my_thread = _thread.allocate_lock()
+    id_next_elem_in_window = 0
+    id_next_elem_to_send = 0
+    packet_index = 0
+
     # Bind the socket to address. The socket must not already be bound.
     # (The format of address depends on the address family — see above.)
     # Raises an auditing event socket.bind with arguments self, address.
 
     socket_for_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     socket_for_send.bind(packetS.SOURCE_ADDRESS)
-    socket_for_send.settimeout(TIMER)
+    buffer, number_packets = create_buffer(file_to_send)
 
+    # print("-------------------\n")
+    # for pack in buffer:
+    #   print(pack.data)
+    # print("-------------------\n")                
+               
+    
     print("to send")
 
-    buffer, number_packets = create_buffer(file_to_send)
-    
+    _thread.start_new_thread(receive, (socket_for_send, ))
 
-    start_time = time.time()
-    
-    number_elem_in_win = 0
-    packet_index = 0
+    while id_next_elem_in_window < number_packets :   
+         # lock.acquire(waitflag=1, timeout=- 1) -> lock unconditionally, if necessary waiting until it is released by another thread
+        # lock.release() -> free the lock. The lock must have been acquired earlier, but not necessarily by the same thread.
 
-    # threading.start_new_thread()
+        my_thread.acquire()     
+        while id_next_elem_in_window + WINDOW_SIZE < id_next_elem_to_send:
+            if buffer[id_next_elem_to_send].flag == packetS.State.ON_HOLD:
+                start_time = time.time()
+                buffer[id_next_elem_to_send].flag = packetS.State.SEND
+                socket.sendto(buffer[id_next_elem_to_send].id_packet.to_bytes(4, byteorder='little', signed=True) + buffer[id_next_elem_to_send].data, packetS.DESTINATION_ADDRESS)
+                print(buffer[id_next_elem_to_send].data)
+                id_next_elem_to_send += 1
+        
+        start_time = time.time()
 
-    while True:
-        try:
-            new_packet, client_address = socket_for_send.recvfrom(packetS.DESTINATION_ADDRESS[1])
+        # we need a while how wait timeout or an akn
+        while time.time() - start_time < STOP_TIME:
+            my_thread.acquire()
+            time.sleep(WAITING_TIME)
+            my_thread.acquire()
 
+        # if the time is out and we didn t receive an ackowledge, we put the beginning of window on this element 
+        if time.time() - start_time >= STOP_TIME:
+            print("timeout\n")
+            start_time = -1
+            id_next_elem_to_send = id_next_elem_in_window
+        else:
+            # the time is not out.We receive an ackowledge, the wind will be slide
+            print("sliding window")
+        my_thread.release()
 
-        except:
-            break
-
-    # while number_elem_in_win < WINDOW_SIZE:
-    #     for packet in buffer:
-    #         if packet.flag == 1:
-    #             number_elem_in_win += 1
-    #             if number_elem_in_win >= WINDOW_SIZE:
-    #                 break
-    #             packet.send_packet(socket_for_send)
-    #             print(packet.data)
-
-    for packet in buffer:
-        if packet.flag == packetS.State.ON_HOLD and number_elem_in_win < WINDOW_SIZE:
-            packet.flag = packetS.State.SEND
-            id_packet_in_bytes = packet.id_packet.to_bytes(4, byteorder='little', signed=True)
-            socket.sendto(packet.data + id_packet_in_bytes, packetS.DESTINATION_ADDRESS)
-            print(packet.data)
-    
     socket_for_send.close()
 
+
+def receive(socket_for_send):
+    while True:
+
+        # check what we receive
+        packet, client_address = socket_for_send.recvfrom(1024)
+        print(packet, client_address)
+
+        # to see the id for received packet
+        acknowledge = int.from_bytes(packet[0:4], byteorder = 'little', signed = True)
+        print("it s sent the packet ", acknowledge)
+
+        # with each received packet, the window will be slide
+        if acknowledge > id_next_elem_in_window:
+            my_thread.acquire()
+            id_next_elem_in_window = acknowledge
+            start_time = -1
+            my_thread.release()
+           
 
 if __name__ == '__main__':
     send("file_to_send.txt")
