@@ -76,7 +76,6 @@ class GUI():
                 terminal_box.insert(END, "File sent!\n")
                 file.close()
 
-
         def clear():
                 browse.set('Add file')
                 text_box.delete("1.0", END)
