@@ -78,6 +78,7 @@ class GUI():
 
         def clear():
                 browse.set('Add file')
+                print('---')
                 text_box.delete("1.0", END)
                 terminal_box.delete("1.0", END)
 
