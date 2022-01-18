@@ -15,15 +15,16 @@ def receive_packet_and_send_ack(file_received, socket_received):
         return
     expected_id_packet = 0
     packet = packetS.Packet()
-
+    print("hi")
     while True:
         data_and_id_in_bytes, source_address = socket_received.recvfrom(512)
+        print("body")
         packet.id_packet = int.from_bytes(data_and_id_in_bytes[0:4], byteorder='little', signed=True)
         packet.flag = packetS.State(int.from_bytes(data_and_id_in_bytes[4:8], byteorder='little', signed=True))
         packet.data = data_and_id_in_bytes[4:]
         if not packet.data:
             break
-
+        print(packet.id_packet, expected_id_packet)
         print(packet.data)
         file.write(packet.data)
         # sending ack
@@ -50,4 +51,4 @@ def receive(file_received):
 
 
 if __name__ == '__main__':
-    receive("file_received")
+    receive("file_received.txt")

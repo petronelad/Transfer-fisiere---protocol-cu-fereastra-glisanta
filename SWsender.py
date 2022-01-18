@@ -1,6 +1,5 @@
 import socket
 import _thread
-from struct import pack
 import packetS
 import time
 
@@ -35,9 +34,10 @@ def create_buffer(file_to_send):
         packet.data = file.read(PACKET_SIZE)
         if not packet.data:
             break
-        no_packet_in_buffer += 1
         packet.create_packet(no_packet_in_buffer, packetS.State.ON_HOLD)
         all_packets.append(packet)
+        no_packet_in_buffer += 1
+
     file.close()
     return all_packets, no_packet_in_buffer
 
@@ -78,7 +78,7 @@ def send_and_receive_ack(file_to_send, socket_for_send):
                 socket_for_send.sendto(buffer[id_next_elem_to_send].id_packet.to_bytes(4, byteorder='little', signed=True) \
                     + buffer[id_next_elem_to_send].flag.value.to_bytes(4, byteorder='little', signed=True) + buffer[
                     id_next_elem_to_send].data, packetS.DESTINATION_ADDRESS)
-                print(buffer[id_next_elem_to_send].data)
+                # print(buffer[id_next_elem_to_send].data)
                 id_next_elem_to_send += 1
 
         start_time = time.time()
@@ -94,9 +94,7 @@ def send_and_receive_ack(file_to_send, socket_for_send):
             print("timeout\n")
             start_time = TIMER_STOP
             id_next_elem_to_send = id_first_elem_in_window
-        else:
-            # the time is not out.We receive an ackowledge, the wind will be slide
-            print("sliding window")
+
         my_thread.release()
 
 
@@ -106,7 +104,7 @@ def receive(socket_for_send):
         print("+1+")
         # check what we receive
         packet, client_address = socket_for_send.recvfrom(512)
-        print(packet, client_address)
+        # print(packet, client_address)
 
         # to see the id for received packet
         acknowledge = int.from_bytes(packet[0:4], byteorder='little', signed=True)
@@ -118,6 +116,8 @@ def receive(socket_for_send):
             my_thread.acquire()
             id_first_elem_in_window = acknowledge + 1
             start_time = TIMER_STOP
+            # the time is not out.We receive an ackowledge, the wind will be slide
+            print("sliding window")
             my_thread.release()
 
 
