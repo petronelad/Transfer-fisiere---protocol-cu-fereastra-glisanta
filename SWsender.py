@@ -4,12 +4,13 @@ from struct import pack
 import packetS
 import time
 
-WAITING_TIME = 1
-STOP_TIME = 5
-PACKET_SIZE = 200
+WAITING_TIME = 0.2
+STOP_TIME = 1
+TIMER_STOP = -1
+PACKET_SIZE = 256
 WINDOW_SIZE = 8
 
-start_time = STOP_TIME
+start_time = TIMER_STOP
 my_thread = _thread.allocate_lock()
 id_first_elem_in_window = 0
 
@@ -53,7 +54,7 @@ def create_buffer(file_to_send):
 def send_and_receive_ack(file_to_send, socket_for_send):
     global id_first_elem_in_window, start_time, my_thread
     id_next_elem_to_send = 0
-    packet_index = 0
+    id_first_elem_in_window = 0
     buffer, number_packets = create_buffer(file_to_send)
 
     # print("-------------------\n")
@@ -67,31 +68,31 @@ def send_and_receive_ack(file_to_send, socket_for_send):
         # lock.acquire(waitflag=1, timeout=- 1) -> lock unconditionally, if necessary waiting until it is released by another thread
         # lock.release() -> free the lock. The lock must have been acquired earlier, but not necessarily by the same thread.
         my_thread.acquire()
-        while id_first_elem_in_window + WINDOW_SIZE < id_next_elem_to_send:
+        while id_first_elem_in_window + WINDOW_SIZE > id_next_elem_to_send:
             if buffer[id_next_elem_to_send].flag == packetS.State.ON_HOLD:
-                start_time = time.time()
+                # start_time = time.time()
                 buffer[id_next_elem_to_send].flag = packetS.State.SEND
                 print(buffer[id_next_elem_to_send].id_packet.to_bytes(4, byteorder='little', signed=True) + buffer[
-                    id_next_elem_to_send].flag.value.to_bytes(4, byteorder='little', signed=True) + buffer[
-                          id_next_elem_to_send].data)
-                socket.sendto(
-                    buffer[id_next_elem_to_send].id_packet.to_bytes(4, byteorder='little', signed=True) + buffer[
-                        id_next_elem_to_send].flag.value.to_bytes(4, byteorder='little', signed=True) + buffer[
-                        id_next_elem_to_send].data, packetS.DESTINATION_ADDRESS)
+                    id_next_elem_to_send].flag.value.to_bytes(4, byteorder='little', signed=True) + \
+                      buffer[id_next_elem_to_send].data)
+                socket_for_send.sendto(buffer[id_next_elem_to_send].id_packet.to_bytes(4, byteorder='little', signed=True) \
+                    + buffer[id_next_elem_to_send].flag.value.to_bytes(4, byteorder='little', signed=True) + buffer[
+                    id_next_elem_to_send].data, packetS.DESTINATION_ADDRESS)
                 print(buffer[id_next_elem_to_send].data)
                 id_next_elem_to_send += 1
 
         start_time = time.time()
-        # we need a while how wait timeout or an akn
+        # we need a while waiting for timeout or an akn
         while time.time() - start_time < STOP_TIME:
-            my_thread.acquire()
+            my_thread.release()
+            print("waiting")
             time.sleep(WAITING_TIME)
             my_thread.acquire()
 
         # if the time is out and we didn t receive an ackowledge, we put the beginning of window on this element
         if time.time() - start_time >= STOP_TIME:
             print("timeout\n")
-            start_time = -1
+            start_time = TIMER_STOP
             id_next_elem_to_send = id_first_elem_in_window
         else:
             # the time is not out.We receive an ackowledge, the wind will be slide
@@ -104,7 +105,7 @@ def receive(socket_for_send):
     while True:
         print("+1+")
         # check what we receive
-        packet, client_address = socket_for_send.recvfrom(1024)
+        packet, client_address = socket_for_send.recvfrom(512)
         print(packet, client_address)
 
         # to see the id for received packet
@@ -116,7 +117,7 @@ def receive(socket_for_send):
         if acknowledge >= id_first_elem_in_window and status == 3:
             my_thread.acquire()
             id_first_elem_in_window = acknowledge + 1
-            start_time = -1
+            start_time = TIMER_STOP
             my_thread.release()
 
 

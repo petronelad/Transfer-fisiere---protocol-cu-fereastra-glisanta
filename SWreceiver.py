@@ -1,5 +1,4 @@
 import socket
-from struct import pack
 import packetS
 
 '''
@@ -14,38 +13,32 @@ def receive_packet_and_send_ack(file_received, socket_received):
     except IOError:
         print("The file can't be opened")
         return
-    id_packet_in_buffer = 0
-    all_packets = []
+    expected_id_packet = 0
     packet = packetS.Packet()
 
     while True:
-
-        # packet.receive_packet(socket_received)
-        data_and_id_in_bytes, source_address = socket_received.recvfrom(1024)
+        data_and_id_in_bytes, source_address = socket_received.recvfrom(512)
         packet.id_packet = int.from_bytes(data_and_id_in_bytes[0:4], byteorder='little', signed=True)
         packet.flag = packetS.State(int.from_bytes(data_and_id_in_bytes[4:8], byteorder='little', signed=True))
         packet.data = data_and_id_in_bytes[4:]
         if not packet.data:
             break
 
-        if id_packet_in_buffer == packet.id_packet:
-            print("expected packet ", id_packet_in_buffer, "\nreceived packet ", packet.id_packet)
+        print(packet.data)
+        file.write(packet.data)
+        # sending ack
+        if expected_id_packet == packet.id_packet:
+            print("expected packet ", expected_id_packet, "\nreceived packet ", packet.id_packet)
             print("ack can be sent")
-            socket_received.sendto(packet.send_response(), source_address)
             packet.flag = packetS.State.RECEIVED
-            id_packet_in_buffer += 1
-
-            all_packets.append(packet)
-            print(packet.data)
-            file.write(packet.data)
+            socket_received.sendto(packet.send_response(), source_address)
+            expected_id_packet += 1
         else:
             print("lost packet")
-            print(
-                id_packet_in_buffer.to_bytes(4, byteorder='little', signed=True) + packetS.State.UNKNOWN.value.to_bytes(
-                    4, byteorder='little', signed=True))
-            socket_received.sendto(
-                id_packet_in_buffer.to_bytes(4, byteorder='little', signed=True) + packetS.State.UNKNOWN.value.to_bytes(
-                    4, byteorder='little', signed=True), source_address)
+            print(expected_id_packet.to_bytes(4, byteorder='little', signed=True) + \
+                  packetS.State.UNKNOWN.value.to_bytes(4, byteorder='little', signed=True))
+            socket_received.sendto(expected_id_packet.to_bytes(4, byteorder='little', signed=True) + \
+                  packetS.State.UNKNOWN.value.to_bytes(4, byteorder='little', signed=True), source_address)
     file.close()
 
 
