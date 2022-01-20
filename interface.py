@@ -2,6 +2,7 @@ import threading
 import tkinter as tk
 from tkinter import *
 from tkinter.filedialog import askopenfile
+from tokenize import String
 import SWsender
 import SWreceiver
 
@@ -79,11 +80,15 @@ class GUI():
                 # print("-------------------\n")
                 # print(text_box.get("1.0", "end-1c").encode())
                 # print("-------------------\n")
-                file = open("file_intermediate.txt", "wb")
-                file.write(text_box.get("1.0", "end-1c").encode())
-                SWsender.send("file_intermediate.txt")
-                terminal_box.insert(END, "File sent!\n")
-                file.close()
+                if connect_var.get()=="Conected":
+                    file = open("file_intermediate.txt", "wb")
+                    file.write(text_box.get("1.0", "end-1c").encode())
+                    SWsender.send("file_intermediate.txt")
+                    terminal_box.insert(END, "File sent!\n")
+                    file.close()
+                else:
+                    terminal_box.insert(END, "Firstly connect!\n")
+
 
         def clear():
                 browse.set('Add file')
@@ -100,14 +105,17 @@ class GUI():
         button_send.place(relx=0.20, rely=0.7, relwidth=0.1, relheight=0.07)
 
         def receive_pack_callback():
-            terminal_box.insert(END, "Connecting\n")
-            SWreceiver.receive('file_received.txt')
             terminal_box.insert(END, "Connected\n")
+            SWreceiver.receive('file_received.txt')
+            connect_var.set("Connect")
+            terminal_box.insert(END, "End connection\n")
 
 
         # buton Connnect
-        buttonD = tk.Button(text="Connect", command=lambda : threading.Thread(target=receive_pack_callback).start(), bg='#FF0000')
-        buttonD.place(relx=0.70, rely=0.7, relwidth=0.1, relheight=0.07)
+        connect_var = StringVar()
+        button_connect = tk.Button(textvariable=connect_var, command=lambda : threading.Thread(target=receive_pack_callback).start(), bg='#FF0000')
+        connect_var.set("Connect")
+        button_connect.place(relx=0.70, rely=0.7, relwidth=0.1, relheight=0.07)
 
         # casuta de introdus text -> this is done with text_box from sender
         '''
