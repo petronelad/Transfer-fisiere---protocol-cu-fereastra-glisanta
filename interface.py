@@ -1,7 +1,9 @@
+import threading
 import tkinter as tk
 from tkinter import *
 from tkinter.filedialog import askopenfile
 import SWsender
+import SWreceiver
 
 
 class GUI():
@@ -9,6 +11,8 @@ class GUI():
         # creare fereastra
         window = tk.Tk()
         window.title('Transfer de fisiere')
+        thread = threading.Thread(target=window.mainloop)
+        thread.start()
 
         # dimensiuni fereastra
         canvas = tk.Canvas(window, height=700, width=1200)
@@ -47,6 +51,11 @@ class GUI():
 
         text_box = tk.Text(SenderView, height=500, width=500, padx=15, pady=15, font='Helvetica 10')
         text_box.place(relx=0.5, rely=0.05, relwidth=0.9, relheight=0.9, anchor='n')
+        text_box.insert(END, "SENDER\n")
+
+        text_box2 = tk.Text(ReceiverView, height=500, width=500, padx=15, pady=15, font='Helvetica 10')
+        text_box2.place(relx=0.5, rely=0.05, relwidth=0.9, relheight=0.9, anchor='n')
+        text_box2.insert(END, "RECEIVER\n")
 
         # adaugare fisier
         def open_file():
@@ -79,6 +88,7 @@ class GUI():
         def clear():
                 browse.set('Add file')
                 text_box.delete("1.0", END)
+                text_box2.delete("1.0", END)
                 terminal_box.delete("1.0", END)
 
         # clear Text Box
@@ -89,8 +99,14 @@ class GUI():
         button_send = tk.Button(text="Send", bg='#00FF00', command=lambda: send_pack_callback())
         button_send.place(relx=0.20, rely=0.7, relwidth=0.1, relheight=0.07)
 
-        # buton Disconnect
-        buttonD = tk.Button(text="Disconnect", bg='#FF0000')
+        def receive_pack_callback():
+            terminal_box.insert(END, "Connecting\n")
+            SWreceiver.receive('file_received.txt')
+            terminal_box.insert(END, "Connected\n")
+
+
+        # buton Connnect
+        buttonD = tk.Button(text="Connect", command=lambda : threading.Thread(target=receive_pack_callback).start(), bg='#FF0000')
         buttonD.place(relx=0.70, rely=0.7, relwidth=0.1, relheight=0.07)
 
         # casuta de introdus text -> this is done with text_box from sender
