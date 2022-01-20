@@ -97,12 +97,14 @@ class GUI():
                 terminal_box.delete("1.0", END)
 
         # clear Text Box
-        button_clear = tk.Button(text="Clear", bg='#4169E1', command=clear)
-        button_clear.place(relx=0.35, rely=0.7, relwidth=0.1, relheight=0.07)
+        button_clear = tk.Button(text="Clear", bg='#4169E1', command=clear,
+                                 font='Arial', fg='white', height=2, width=15)
+        button_clear.place(relx=0.70, rely=0.7, relwidth=0.1, relheight=0.07)
 
         # buton Send
-        button_send = tk.Button(text="Send", bg='#00FF00', command=lambda: send_pack_callback())
-        button_send.place(relx=0.20, rely=0.7, relwidth=0.1, relheight=0.07)
+        button_send = tk.Button(text="Send", bg='#964B00', command=lambda: send_pack_callback(),
+                                font='Arial', fg='white', height=2, width=15)
+        button_send.place(relx=0.32, rely=0.7, relwidth=0.1, relheight=0.07)
 
         def receive_pack_callback():
             terminal_box.insert(END, "Connected\n")
@@ -113,9 +115,10 @@ class GUI():
 
         # buton Connnect
         connect_var = StringVar()
-        button_connect = tk.Button(textvariable=connect_var, command=lambda : threading.Thread(target=receive_pack_callback).start(), bg='#FF0000')
+        button_connect = tk.Button(textvariable=connect_var, command=lambda : threading.Thread(target=receive_pack_callback).start(),
+                                   font = 'Arial', bg='#00FF00', fg = 'white', height = 2, width = 15)
         connect_var.set("Connect")
-        button_connect.place(relx=0.70, rely=0.7, relwidth=0.1, relheight=0.07)
+        button_connect.place(relx = 0.20, rely = 0.7, relwidth = 0.1, relheight = 0.07)
 
         # casuta de introdus text -> this is done with text_box from sender
         '''
