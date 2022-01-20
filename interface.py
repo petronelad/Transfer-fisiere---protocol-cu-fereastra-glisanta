@@ -52,11 +52,9 @@ class GUI():
 
         text_box = tk.Text(SenderView, height=500, width=500, padx=15, pady=15, font='Helvetica 10')
         text_box.place(relx=0.5, rely=0.05, relwidth=0.9, relheight=0.9, anchor='n')
-        text_box.insert(END, "SENDER\n")
 
         text_box2 = tk.Text(ReceiverView, height=500, width=500, padx=15, pady=15, font='Helvetica 10')
         text_box2.place(relx=0.5, rely=0.05, relwidth=0.9, relheight=0.9, anchor='n')
-        text_box2.insert(END, "RECEIVER\n")
 
         # adaugare fisier
         def open_file():
@@ -80,7 +78,7 @@ class GUI():
                 # print("-------------------\n")
                 # print(text_box.get("1.0", "end-1c").encode())
                 # print("-------------------\n")
-                if connect_var.get()=="Conected":
+                if connect_var.get()=="Connected":
                     file = open("file_intermediate.txt", "wb")
                     file.write(text_box.get("1.0", "end-1c").encode())
                     SWsender.send("file_intermediate.txt")
@@ -108,8 +106,8 @@ class GUI():
 
         def receive_pack_callback():
             terminal_box.insert(END, "Connected\n")
+            connect_var.set("Connected")
             SWreceiver.receive('file_received.txt')
-            connect_var.set("Connect")
             terminal_box.insert(END, "End connection\n")
 
 
