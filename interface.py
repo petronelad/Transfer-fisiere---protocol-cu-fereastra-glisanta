@@ -12,8 +12,6 @@ class GUI():
         # creare fereastra
         window = tk.Tk()
         window.title('Transfer de fisiere')
-        thread = threading.Thread(target=window.mainloop)
-        thread.start()
 
         # dimensiuni fereastra
         canvas = tk.Canvas(window, height=700, width=1200)
