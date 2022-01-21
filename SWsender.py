@@ -3,6 +3,7 @@ import _thread
 import packetS
 import time
 
+
 WAITING_TIME = 0.2
 STOP_TIME = 1
 TIMER_STOP = -1
@@ -50,19 +51,15 @@ def create_buffer(file_to_send):
     SOCK_DGRAM is a cst that represents  the socket type, used for the 2nd
     argument to socket().'''
 
-
 def send_and_receive_ack(file_to_send, socket_for_send):
-    global id_first_elem_in_window, start_time, my_thread
+    global id_first_elem_in_window, start_time
     id_next_elem_to_send = 0
     id_first_elem_in_window = 0
     buffer, number_packets = create_buffer(file_to_send)
 
-    # print("-------------------\n")
-    # for pack in buffer:
-    #   print(pack.data)
-    # print("-------------------\n")
-    print("to send")
 
+    print("to send")
+    var = 3
     _thread.start_new_thread(receive, (socket_for_send,))
     while id_first_elem_in_window < number_packets:
         # lock.acquire(waitflag=1, timeout=- 1) -> lock unconditionally, if necessary waiting until it is released by another thread
@@ -70,8 +67,10 @@ def send_and_receive_ack(file_to_send, socket_for_send):
         my_thread.acquire()
         while id_first_elem_in_window + WINDOW_SIZE > id_next_elem_to_send:
             if buffer[id_next_elem_to_send].flag == packetS.State.ON_HOLD:
-                # start_time = time.time()
                 buffer[id_next_elem_to_send].flag = packetS.State.SEND
+                # if id_next_elem_to_send==var:
+                #     id_next_elem_to_send=4
+                #     var=0
                 print(buffer[id_next_elem_to_send].id_packet.to_bytes(4, byteorder='little', signed=True) + buffer[
                     id_next_elem_to_send].flag.value.to_bytes(4, byteorder='little', signed=True) + \
                       buffer[id_next_elem_to_send].data)
@@ -80,10 +79,9 @@ def send_and_receive_ack(file_to_send, socket_for_send):
                     id_next_elem_to_send].data, packetS.DESTINATION_ADDRESS)
                 # print(buffer[id_next_elem_to_send].data)
                 id_next_elem_to_send += 1
-
         start_time = time.time()
         # we need a while waiting for timeout or an akn
-        while time.time() - start_time < STOP_TIME:
+        while time.time() - start_time < STOP_TIME :
             my_thread.release()
             print("waiting")
             time.sleep(WAITING_TIME)
@@ -95,30 +93,39 @@ def send_and_receive_ack(file_to_send, socket_for_send):
             start_time = TIMER_STOP
             id_next_elem_to_send = id_first_elem_in_window
 
-        my_thread.release()
+            my_thread.release()
 
 
 def receive(socket_for_send):
-    global id_first_elem_in_window, start_time, my_thread
-    while True:
-        print("+1+")
-        # check what we receive
-        packet, client_address = socket_for_send.recvfrom(512)
-        # print(packet, client_address)
+    global id_first_elem_in_window, start_time
+    try:
+        while True:
+            try:
+                print("+1+")
+                # check what we receive
+                packet, client_address = socket_for_send.recvfrom(512)
+                # print(packet, client_address)
 
-        # to see the id for received packet
-        acknowledge = int.from_bytes(packet[0:4], byteorder='little', signed=True)
-        print("it s sent the packet ", acknowledge)
-        status = int.from_bytes(packet[4:], byteorder='little', signed=True)
-        print("status ", status)
-        # with each received packet, the window will be slide
-        if acknowledge >= id_first_elem_in_window and status == 3:
-            my_thread.acquire()
-            id_first_elem_in_window = acknowledge + 1
-            start_time = TIMER_STOP
-            # the time is not out.We receive an ackowledge, the wind will be slide
-            print("sliding window")
-            my_thread.release()
+                # to see the id for received packet
+                acknowledge = int.from_bytes(packet[0:4], byteorder='little', signed=True)
+                print("it s sent the packet ", acknowledge)
+                status = int.from_bytes(packet[4:], byteorder='little', signed=True)
+                print("status ", status)
+                # with each received packet, the window will be slide
+                if acknowledge >= id_first_elem_in_window and status == 3:
+                    my_thread.acquire()
+                    id_first_elem_in_window = acknowledge + 1
+                    start_time = TIMER_STOP
+                    # the time is not out.We receive an ackowledge, the wind will be slide
+                    print("sliding window")
+                    my_thread.release()
+
+            except OSError as err:
+
+                print("------------it's over-----------")
+                _thread.exit()
+    except KeyboardInterrupt:
+        print("keyboardinterrupt")
 
 
 def send(file_to_send):

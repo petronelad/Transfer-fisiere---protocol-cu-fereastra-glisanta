@@ -32,5 +32,5 @@ class Packet:
 
 
     def send_response(self):
-        print(self.id_packet.to_bytes(4, byteorder = 'little', signed = True) + State.RECEIVED.value.to_bytes(4, byteorder = 'little', signed = True))
+        # print(self.id_packet.to_bytes(4, byteorder = 'little', signed = True) + State.RECEIVED.value.to_bytes(4, byteorder = 'little', signed = True))
         return self.id_packet.to_bytes(4, byteorder = 'little', signed = True) + State.RECEIVED.value.to_bytes(4, byteorder = 'little', signed = True)
