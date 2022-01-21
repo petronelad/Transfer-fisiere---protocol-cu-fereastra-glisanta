@@ -94,6 +94,8 @@ def send_and_receive_ack(file_to_send, socket_for_send):
             id_next_elem_to_send = id_first_elem_in_window
 
             my_thread.release()
+    socket_for_send.sendto(id_next_elem_to_send.to_bytes(4, byteorder='little', signed=True) + var.to_bytes(4, byteorder='little', signed=True) +b''
+                           , packetS.DESTINATION_ADDRESS)
 
 
 def receive(socket_for_send):
@@ -120,7 +122,7 @@ def receive(socket_for_send):
                     print("sliding window")
                     my_thread.release()
 
-            except OSError as err:
+            except OSError:
 
                 print("------------it's over-----------")
                 _thread.exit()

@@ -22,6 +22,7 @@ def receive_packet_and_send_ack(file_received, socket_received):
         packet.flag = packetS.State(int.from_bytes(data_and_id_in_bytes[4:8], byteorder='little', signed=True))
         packet.data = data_and_id_in_bytes[8:]
         if not packet.data:
+            expected_id_packet = 0
             break
         print(packet.id_packet, expected_id_packet)
         print(packet.data)
